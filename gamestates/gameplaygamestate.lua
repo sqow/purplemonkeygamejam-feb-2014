@@ -2,8 +2,11 @@ require 'view/character'
 
 GameplayGameState = {}
 
+local background = nil
+
 function GameplayGameState:init()
   self.character = Character()
+  self.background = love.graphics.newImage( 'assets/images/background.jpg' )
 end
 
 function GameplayGameState:enter()
@@ -14,6 +17,7 @@ function GameplayGameState:update( dt )
 end
 
 function GameplayGameState:draw()
+  love.graphics.draw( self.background, 0, 0, 0, 1, 1, 0, 0, 0, 0 )
   self.character:draw()
 end
 

@@ -15,7 +15,15 @@ Character.State = {
     quads = {},
     frame = 0,
     spriteWidth = 1,
-    spriteHeight = 1
+    spriteHeight = 1,
+    hitSizes = {
+      {width = 41, height = 65},
+      {width = 40, height = 66},
+      {width = 38, height = 64},
+      {width = 38, height = 62},
+      {width = 38, height = 64},
+      {width = 40, height = 65}
+    }
   },
   Walking = {
     image = nil,
@@ -23,7 +31,15 @@ Character.State = {
     quads = {},
     frame = 0,
     spriteWidth = 1,
-    spriteHeight = 1
+    spriteHeight = 1,
+    hitSizes = {
+      {width = 32, height = 65},
+      {width = 20, height = 66},
+      {width = 27, height = 65},
+      {width = 31, height = 65},
+      {width = 19, height = 65},
+      {width = 22, height = 66}
+    }
   },
   Attacking = {
     image = nil,
@@ -31,7 +47,18 @@ Character.State = {
     quads = {},
     frame = 0,
     spriteWidth = 1,
-    spriteHeight = 1
+    spriteHeight = 1,
+    hitSizes = {
+      {width = 44, height = 54},
+      {width = 48, height = 55},
+      {width = 51, height = 54},
+      {width = 45, height = 55},
+      {width = 47, height = 57},
+      {width = 52, height = 56},
+      {width = 60, height = 50},
+      {width = 60, height = 51},
+      {width = 49, height = 54}
+    }
   },
   Damage = {
     image = nil,
@@ -39,7 +66,14 @@ Character.State = {
     quads = {},
     frame = 0,
     spriteWidth = 1,
-    spriteHeight = 1
+    spriteHeight = 1,
+    hitSizes = {
+      {width = 51, height = 56},
+      {width = 56, height = 49},
+      {width = 73, height = 27},
+      {width = 75, height = 24},
+      {width = 34, height = 52}
+    }
   },
   Death = {
     image = nil,
@@ -47,13 +81,17 @@ Character.State = {
     quads = {},
     frame = 0,
     spriteWidth = 1,
-    spriteHeight = 1
+    spriteHeight = 1,
+    hitSizes = {
+      {width = 46, height = 59},
+      {width = 46, height = 63}
+    }
   }
 }
 
 Character.__name = 'Character'
 
-local framerate, time = 1 / 12, 0
+local framerate, time, speedModifier = 1 / 12, 0, 2
 local deathAnimCounter = 0
 
 local keyDown = {
@@ -115,38 +153,42 @@ function Character:canMove()
 end
 
 function Character:update( dt )
+  local st = self:getState()
+  local char_width, char_height = st.hitSizes[ st.frame ].width, st.hitSizes[ st.frame ].height
+  local offset_width, offset_height = (st.spriteWidth - char_width) * 0.5, (st.spriteHeight - char_height) * 0.5
+
   if keyDown.up then
-    self.y = math.max( self.y - (self.state.spriteHeight * 3) * dt, 0 )
+    self.y = math.max( self.y - (char_height * speedModifier) * dt, -offset_width )
   end
 
   if keyDown.down then
-    self.y = math.min( self.y + (self.state.spriteHeight * 3) * dt, love.graphics.getHeight() - self.state.spriteHeight )
+    self.y = math.min( self.y + (char_height * speedModifier) * dt, love.graphics.getHeight() - (st.spriteWidth * 0.5) - offset_width )
   end
 
   if keyDown.left then
     self.scaleX = -1
-    self.x = math.max( self.x - (self.state.spriteWidth * 3) * dt, 0 )
+    self.x = math.max( self.x - (char_width * speedModifier) * dt, -offset_height )
   end
 
   if keyDown.right then
     self.scaleX = 1
-    self.x = math.min( self.x + (self.state.spriteWidth * 3) * dt, love.graphics.getWidth() - self.state.spriteWidth )
+    self.x = math.min( self.x + (char_width * speedModifier) * dt, love.graphics.getWidth() - (st.spriteHeight * 0.5) - offset_height )
   end
 
-  self.state.batch:bind()
-  self.state.batch:clear()
-  self.state.batch:add( self.state.quads[ self.state.frame ], 0, 0 )
-  self.state.batch:unbind()
+  st.batch:bind()
+  st.batch:clear()
+  st.batch:add( st.quads[ st.frame ], 0, 0 )
+  st.batch:unbind()
 
   time = time + dt
   if time >= framerate then
-    self.state.frame = (self.state.frame % #self.state.quads) + 1
+    st.frame = (st.frame % #st.quads) + 1
     time = 0
-    if self.state.frame <= 1 then
-      if keyDown.attack or self:getState() == Character.State.Damage then
+    if st.frame <= 1 then
+      if keyDown.attack or st == Character.State.Damage then
         keyDown.attack = false
         self:setState( Character.State.Standing )
-      elseif self:getState() == Character.State.Death then
+      elseif st == Character.State.Death then
         -- You dead, sucka
         deathAnimCounter = deathAnimCounter + 1
         if deathAnimCounter >= 5 then
@@ -159,22 +201,22 @@ function Character:update( dt )
 end
 
 function Character:draw()
-  love.graphics.draw( self.state.batch, self.x, self.y, 0, self.scaleX, self.scaleY, self.scaleX < 0 and self.state.spriteWidth or 0 )
+  love.graphics.draw( self:getState().batch, self.x, self.y, 0, self.scaleX, self.scaleY, self.scaleX < 0 and self:getState().spriteWidth or 0 )
 end
 
 function Character:keypressed( key, isrepeat )
   if self:canMove() then
     if key == 'w' or key == 'up' then
-      if self.state ~= Character.State.Walking then self:setState( Character.State.Walking ) end
+      if self:getState() ~= Character.State.Walking then self:setState( Character.State.Walking ) end
       keyDown.up = true
     elseif key == 'a' or key == 'left' then
-      if self.state ~= Character.State.Walking then self:setState( Character.State.Walking ) end
+      if self:getState() ~= Character.State.Walking then self:setState( Character.State.Walking ) end
       keyDown.left = true
     elseif key == 's' or key == 'down' then
-      if self.state ~= Character.State.Walking then self:setState( Character.State.Walking ) end
+      if self:getState() ~= Character.State.Walking then self:setState( Character.State.Walking ) end
       keyDown.down = true
     elseif key == 'd' or key == 'right' then
-      if self.state ~= Character.State.Walking then self:setState( Character.State.Walking ) end
+      if self:getState() ~= Character.State.Walking then self:setState( Character.State.Walking ) end
       keyDown.right = true
     elseif key == ' ' then
       keyDown.attack = true
@@ -189,16 +231,16 @@ end
 
 function Character:keyreleased( key )
   if key == 'w' or key == 'up' then
-    if self:canMove() and self.state ~= Character.State.Standing and not keyDown.left and not keyDown.right and not keyDown.down then self:setState( Character.State.Standing ) end
+    if self:canMove() and self:getState() ~= Character.State.Standing and not keyDown.left and not keyDown.right and not keyDown.down then self:setState( Character.State.Standing ) end
     keyDown.up = false
   elseif key == 'a' or key == 'left' then
-    if self:canMove() and self.state ~= Character.State.Standing and not keyDown.up and not keyDown.right and not keyDown.down then self:setState( Character.State.Standing ) end
+    if self:canMove() and self:getState() ~= Character.State.Standing and not keyDown.up and not keyDown.right and not keyDown.down then self:setState( Character.State.Standing ) end
     keyDown.left = false
   elseif key == 's' or key == 'down' then
-    if self:canMove() and self.state ~= Character.State.Standing and not keyDown.up and not keyDown.left and not keyDown.right then self:setState( Character.State.Standing ) end
+    if self:canMove() and self:getState() ~= Character.State.Standing and not keyDown.up and not keyDown.left and not keyDown.right then self:setState( Character.State.Standing ) end
     keyDown.down = false
   elseif key == 'd' or key == 'right' then
-    if self:canMove() and self.state ~= Character.State.Standing and not keyDown.up and not keyDown.left and not keyDown.down then self:setState( Character.State.Standing ) end
+    if self:canMove() and self:getState() ~= Character.State.Standing and not keyDown.up and not keyDown.left and not keyDown.down then self:setState( Character.State.Standing ) end
     keyDown.right = false
   end
 end
