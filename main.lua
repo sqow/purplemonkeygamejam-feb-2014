@@ -1,62 +1,49 @@
-require 'libs/30log'
+Class = require 'libs/30log'
+require 'libs/Beetle'
+Gamestate = require 'libs/hump/gamestate'
 
-local keyDown = {
-  left = false,
-  right = false,
-  down = false,
-  up = false
+local gstitle = require 'gamestates/titlescreengamestate'
+local gsgameplay = require 'gamestates/gameplaygamestate'
+local gshud = require 'gamestates/hudgamestate'
+local gsgameend = require 'gamestates/gameendgamestate'
+
+State = {
+  Title = gstitle,
+  Gameplay = gsgameplay,
+  HUD = gshud,
+  End = gsgameend
 }
 
 --  Main functions
 
 function love.load( arg )
+  beetle.load()
+  beetle.setKey( '`' )
+
+  Gamestate.registerEvents()
+  Gamestate.switch( State.Title )
+
+  love.graphics.setBackgroundColor( 255, 255, 255 )
 end
 
 function love.update( dt )
-  if keyDown.up then
-    -- Up movement here
-  end
-
-  if keyDown.down then
-    -- Down movement here
-  end
-
-  if keyDown.left then
-    -- Left movement here
-  end
-
-  if keyDown.right then
-    -- Right movement here
-  end
+  
 end
 
 function love.draw()
+  beetle.draw()
 end
 
 --  Key and text input handling
 
 function love.keypressed( key, isrepeat )
-  if key == 'w' or key == 'up' then
-    keyDown.up = true
-  elseif key == 'a' or key == 'left' then
-    keyDown.left = true
-  elseif key == 's' or key == 'down' then
-    keyDown.down = true
-  elseif key == 'd' or key == 'right' then
-    keyDown.right = true
+  if key == 'escape' then
+    love.event.push( 'quit' )
   end
 end
 
 function love.keyreleased( key )
-  if key == 'w' or key == 'up' then
-    keyDown.up = false
-  elseif key == 'a' or key == 'left' then
-    keyDown.left = false
-  elseif key == 's' or key == 'down' then
-    keyDown.down = false
-  elseif key == 'd' or key == 'right' then
-    keyDown.right = false
-  end
+  beetle.key( key )
 end
 
 function love.textinput( text )
