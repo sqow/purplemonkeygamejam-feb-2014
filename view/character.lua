@@ -108,6 +108,14 @@ local keyDown = {
   attack = false
 }
 
+local wasDown = {
+  left = false,
+  right = false,
+  down = false,
+  up = false,
+  attack = false
+}
+
 function Character:__init( x, y, width, height, state )
   self.x = x or 0
   self.y = y or 0
@@ -270,8 +278,16 @@ function Character:update( dt )
     time = 0
     if st.frame <= 1 then
       if keyDown.attack or st == Character.State.Damage then
+        keyDown.up = keyDown.up or wasDown.up
+        keyDown.down = keyDown.down or wasDown.down
+        keyDown.left = keyDown.left or wasDown.left
+        keyDown.right = keyDown.right or wasDown.right
         keyDown.attack = false
-        self:setState( Character.State.Standing )
+        if keyDown.up or keyDown.down or keyDown.left or keyDown.right then
+          self:setState( Character.State.Walking )
+        else
+          self:setState( Character.State.Standing )
+        end
       elseif st == Character.State.Death then
         -- You dead, sucka
         self.dead = true
@@ -312,15 +328,19 @@ function Character:keypressed( key, isrepeat )
     if key == 'w' or key == 'up' then
       if self:getState() ~= Character.State.Walking then self:setState( Character.State.Walking ) end
       keyDown.up = true
+      wasDown.up = true
     elseif key == 'a' or key == 'left' then
       if self:getState() ~= Character.State.Walking then self:setState( Character.State.Walking ) end
       keyDown.left = true
+      wasDown.left = true
     elseif key == 's' or key == 'down' then
       if self:getState() ~= Character.State.Walking then self:setState( Character.State.Walking ) end
       keyDown.down = true
+      wasDown.down = true
     elseif key == 'd' or key == 'right' then
       if self:getState() ~= Character.State.Walking then self:setState( Character.State.Walking ) end
       keyDown.right = true
+      wasDown.right = true
     elseif key == ' ' then
       keyDown.attack = true
       self:setState( Character.State.Attacking )
@@ -336,14 +356,18 @@ function Character:keyreleased( key )
   if key == 'w' or key == 'up' then
     if self:canMove() and self:getState() ~= Character.State.Standing and not keyDown.left and not keyDown.right and not keyDown.down then self:setState( Character.State.Standing ) end
     keyDown.up = false
+    wasDown.up = false
   elseif key == 'a' or key == 'left' then
     if self:canMove() and self:getState() ~= Character.State.Standing and not keyDown.up and not keyDown.right and not keyDown.down then self:setState( Character.State.Standing ) end
     keyDown.left = false
+    wasDown.left = false
   elseif key == 's' or key == 'down' then
     if self:canMove() and self:getState() ~= Character.State.Standing and not keyDown.up and not keyDown.left and not keyDown.right then self:setState( Character.State.Standing ) end
     keyDown.down = false
+    wasDown.down = false
   elseif key == 'd' or key == 'right' then
     if self:canMove() and self:getState() ~= Character.State.Standing and not keyDown.up and not keyDown.left and not keyDown.down then self:setState( Character.State.Standing ) end
     keyDown.right = false
+    wasDown.right = false
   end
 end

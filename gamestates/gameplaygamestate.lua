@@ -12,10 +12,10 @@ function GameplayGameState:init()
   self.character = Character()
   self.background = love.graphics.newImage( 'assets/images/background.jpg' )
 
-  local sw, sh = love.graphics.getWidth(), love.graphics.getHeight() * 0.1
+  local sw, sh = love.graphics.getWidth(), 54
   local cx = -(sw * 0.95)
   self.stats = {
-    color = {0, 0, 0, 255 * 0.66},
+    color = {255, 255, 255, 255 * 0.66},
     openX = 0,
     closeX = cx,
     x = 0,
@@ -30,7 +30,7 @@ function createPickup()
   local r = 10
   local x = math.random( r, love.graphics.getWidth() - r )
   local y = math.random( r, love.graphics.getHeight() - r )
-  local types = {Pickup.Type.Money, Pickup.Type.Food, Pickup.Type.Water, Pickup.Type.Drink}
+  local types = {Pickup.Type.Money, Pickup.Type.Food, Pickup.Type.Water}--, Pickup.Type.Drink}
   local rand = math.randomInt( 1, #types )
   local t = types[rand]
   local v = math.randomRange( 1, 50 )
@@ -44,18 +44,39 @@ function GameplayGameState:enter()
   self.character.x = love.graphics.getWidth() * 0.5 - self.character:getWidth() * 0.5
   self.character.y = love.graphics.getHeight() * 0.5 - self.character:getHeight() * 0.5
 
-  local m, f, w, d = math.randomInt( 75, 150 ), math.randomInt( 75, 150 ), math.randomInt( 75, 150 ), math.randomInt( 75, 150 )
-  local md, fd, wd, dd = math.random( 0.05, 0.2 ), math.random( 0.05, 0.2 ), math.random( 0.05, 0.2 ), math.random( 0.05, 0.2 )
+  local m, f, w--[[, d]] = math.randomInt( 75, 150 ), math.randomInt( 75, 150 ), math.randomInt( 75, 150 )--, math.randomInt( 75, 150 )
+  local md, fd, wd--[[, dd]] = math.random( 0.05, 0.2 ), math.random( 0.05, 0.2 ), math.random( 0.05, 0.2 )--, math.random( 0.05, 0.2 )
   self.values = {
     --  val, orig, decay
     {m, m, md}, --  Money
     {f, f, fd}, --  Food
-    {w, w, wd}, --  Water
-    {d, d, dd} --  Drink
+    {w, w, wd}--[[, --  Water
+    {d, d, dd} --  Drink]]
   }
+
+  self.bgMusic = love.audio.newSource( 'assets/sounds/bg.mp3', 'stream' )
+  self.bgMusic:setLooping( true )
+  self.bgMusic:play()
+
+  self.sounds = {
+    timer = love.audio.newSource( 'assets/sounds/Timer.wav', 'static' ),
+    hit = love.audio.newSource( 'assets/sounds/Hit.wav', 'static' ),
+    pickup = love.audio.newSource( 'assets/sounds/Pickup.wav', 'static' ),
+    death = love.audio.newSource( 'assets/sounds/Death.wav', 'static' )
+  }
+
+  self.doBigScreenShake = false
+  self.doSmallScreenShake = false
+
+  self.sounds.timer:setVolume( 0.25 )
+  self.sounds.pickup:setVolume( 0.5 )
 
   local function generateDecayFunc( gs )
     return function()
+      if gs.character:getState() == Character.State.Death then
+        return
+      end
+      gs.sounds.timer:play()
       for _, v in ipairs( gs.values ) do
         v[1] = v[1] - (v[2] * v[3])
         v[3] = math.random( 0.05, 0.2 )
@@ -109,27 +130,46 @@ end
 function CharacterPickupCollision( dt, char, pickup, dx, dy )
   local idx = Gamestate.current():findPickupIndex( pickup )
   if idx then
+    Gamestate.current().sounds.pickup:play()
     Gamestate.current():applyPickupValueForAppropriateType( pickup )
     Gamestate.current().pickups[ idx ] = createPickup()
   end
 end
 
 function CharacterEnemyCollision( dt, char, enemy, dx, dy )
-  if char:getState() == Character.State.Death or enemy:getState() == Enemy.State.Death then
+  local cs, es = char:getState(), enemy:getState()
+  local ex, ey = enemy.hitShape:center()
+  local cx, cy = char.hitShape:center()
+  if cs == Character.State.Death or es == Enemy.State.Death then
     return
   end
 
-  if char:getState() == Character.State.Attacking then
-    enemy:setState( Enemy.State.Death )
-  elseif enemy:getState() == Enemy.State.Attacking then
-    for _, v in ipairs( Gamestate.current().values ) do
-      v[1] = v[1] - (v[2] * v[3])
+  if cs == Character.State.Attacking then
+    if math.abs( ey - cy ) < char:getHeight() * 0.34 then
+      for _, v in ipairs( Gamestate.current().values ) do
+        v[1] = v[1] + (v[2] * 0.34)
+      end
+      enemy:setState( Enemy.State.Death )
+      Gamestate.current().sounds.hit:play()
+      Gamestate.current().doSmallScreenShake = true
+      Timer.add( 0.2, function() Gamestate.current().doSmallScreenShake = false end )
+    end
+  elseif es == Enemy.State.Attacking and cs ~= Character.State.Damage and not char:isInvincible() then
+    if math.abs( ey - cy ) < char:getHeight() * 0.34 then
+      for _, v in ipairs( Gamestate.current().values ) do
+        v[1] = v[1] - (v[2] * v[3])
+      end
+      Gamestate.current().sounds.hit:play()
       char:setState( Character.State.Damage )
+      Gamestate.current().doSmallScreenShake = true
+      Timer.add( 0.2, function() Gamestate.current().doSmallScreenShake = false end )
     end
   elseif not char:isInvincible() then
-    enemy:setState( Enemy.State.Attacking )
-    local ew, eh = enemy:getWidth() * 0.5, enemy:getHeight() * 0.5
-    enemy.target = {math.random( ew, love.graphics.getWidth() - ew ), math.random( eh, love.graphics.getHeight() - eh)}
+    if math.abs( ey - cy ) < char:getHeight() * 0.34 then
+      enemy:setState( Enemy.State.Attacking )
+      local ew, eh = enemy:getWidth() * 0.5, enemy:getHeight() * 0.5
+      enemy.target = {math.random( ew, love.graphics.getWidth() - ew ), math.random( eh, love.graphics.getHeight() - eh)}
+    end
   end
 end
 
@@ -178,8 +218,11 @@ end
 
 function GameplayGameState:update( dt )
   for _, v in ipairs( self.values ) do
-    if v[1] <= -1000 then
+    if v[1] <= -1000 and self.character:getState() ~= Character.State.Death then
+      self.sounds.death:play()
       self.character:setState( Character.State.Death )
+      Gamestate.current().doBigScreenShake = true
+      Timer.add( 0.6, function() Gamestate.current().doBigScreenShake = false end )
     end
   end
 
@@ -197,6 +240,17 @@ function GameplayGameState:update( dt )
 end
 
 function GameplayGameState:draw()
+  if self.doBigScreenShake then
+    love.graphics.push()
+    local shakeAmt = math.random( -10, 10 )
+    love.graphics.translate( shakeAmt, shakeAmt )
+  elseif self.doSmallScreenShake then
+    love.graphics.push()
+    local shakeAmt = math.random( -5, 5 )
+    love.graphics.translate( shakeAmt, shakeAmt )
+  end
+
+  love.graphics.setColor( 255, 255, 255, 255 )
   love.graphics.draw( self.background, 0, 0 )
   self.character:draw()
 
@@ -209,7 +263,7 @@ function GameplayGameState:draw()
   end
 
   love.graphics.push()
-  love.graphics.setColor( 255, 255, 0 )
+  love.graphics.setColor( 255, 255, 0, 255 )
   for i = #self.hitsToDraw, 1, -1 do
     self.hitsToDraw[i].count = self.hitsToDraw[i].count + 1
     love.graphics.rectangle( 'line', self.hitsToDraw[i].x, self.hitsToDraw[i].y, self.hitsToDraw[i].width, self.hitsToDraw[i].height )
@@ -224,13 +278,17 @@ function GameplayGameState:draw()
     love.graphics.setColor( self.stats.color )
     love.graphics.rectangle( 'fill', 0, 0, self.stats.width, self.stats.height )
 
-    love.graphics.setColor( 255, 255, 255, 255 )
-    local w = (love.graphics.getWidth() - 40) * 0.25
-    love.graphics.printf( string.format( 'Your money: $%.02f', self.values[1][1] ), 20, 20, self.stats.width - 40, 'left' )
-    love.graphics.printf( string.format( 'Your food: %.02f', self.values[2][1] ), 20 + w, 20, self.stats.width - 40, 'left' )
-    love.graphics.printf( string.format( 'Your water: %.02f', self.values[3][1] ), 20 + w * 2, 20, self.stats.width - 40, 'left' )
-    love.graphics.printf( string.format( 'Your drink: %.02f', self.values[4][1] ), 20 + w * 3, 20, self.stats.width - 40, 'left' )
+    love.graphics.setColor( math.abs(255 - self.stats.color[1]), math.abs(255 - self.stats.color[2]), math.abs(255 - self.stats.color[3]), 255 )
+    local w = (love.graphics.getWidth() - 40) * 0.33
+    love.graphics.printf( string.format( 'Your money: $%.02f', self.values[1][1] ), 20 + w * 0.25, 20, w, 'left' )
+    love.graphics.printf( string.format( 'Your food: %.02f',   self.values[2][1] ), 20 + w + w * 0.25, 20, w, 'left' )
+    love.graphics.printf( string.format( 'Your water: %.02f',  self.values[3][1] ), 20 + w * 2 + w * 0.25, 20, w, 'left' )
+    --love.graphics.printf( string.format( 'Your drink: %.02f', self.values[4][1] ), 20 + w * 3, 20, self.stats.width - 40, 'left' )
   love.graphics.pop()
+
+  if self.doBigScreenShake or self.doSmallScreenShake then
+    love.graphics.pop()
+  end
 end
 
 function GameplayGameState:focus( focus )
@@ -265,6 +323,8 @@ end
 
 function GameplayGameState:leave()
   Collider:clear()
+  Timer.cancel( self.decayTimer )
+  self.bgMusic:stop()
 end
 
 return GameplayGameState

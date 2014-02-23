@@ -31,12 +31,12 @@ Pickup.Type = {
     color = {0, 0, 255, fullAlpha},
     faded = {0, 0, 255, fadedAlpha},
     label = 'W'
-  },
+  }--[[,
   Drink = {
     color = {0, 255, 0, fullAlpha},
     faded = {0, 255, 0, fadedAlpha},
     label = 'D'
-  }
+  }]]
 }
 
 function Pickup:__init( x, y, width, height, pickupType, value )

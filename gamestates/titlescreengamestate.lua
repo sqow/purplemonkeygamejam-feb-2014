@@ -31,6 +31,10 @@ You were given medals and acclaim, but those didn't pay for food.
 Now you're just trying to survive.
 Get money. Get food. Get water. Get drinks.
 You've gone through too much to die destitute.
+
+
+
+PAY ATTENTION TO YOUR RESOURCES IN THE BOTTOM BAR! You know, because they're important.
 ]], half_w * 0.5, half_h * 0.5, half_w, 'center' )
   love.graphics.printf( 'Press <enter> to continue', half_w * 0.5, h - 50, half_w, 'center' )
 end
