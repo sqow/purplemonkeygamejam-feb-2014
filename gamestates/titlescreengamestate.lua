@@ -29,7 +29,7 @@ You were hailed as the hero, but that didn't last.
 You were given medals and acclaim, but those didn't pay for food.
 
 Now you're just trying to survive.
-Get money. Get food. Get water. Get drinks.
+Get money. Get food. Get water.
 You've gone through too much to die destitute.
 
 
