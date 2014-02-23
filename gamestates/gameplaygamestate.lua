@@ -152,7 +152,7 @@ function CharacterEnemyCollision( dt, char, enemy, dx, dy )
       enemy:setState( Enemy.State.Death )
       Gamestate.current().sounds.hit:play()
       Gamestate.current().doSmallScreenShake = true
-      Timer.add( 0.2, function() Gamestate.current().doSmallScreenShake = false end )
+      Timer.add( 0.4, function() Gamestate.current().doSmallScreenShake = false end )
     end
   elseif es == Enemy.State.Attacking and cs ~= Character.State.Damage and not char:isInvincible() then
     if math.abs( ey - cy ) < char:getHeight() * 0.34 then
@@ -161,8 +161,8 @@ function CharacterEnemyCollision( dt, char, enemy, dx, dy )
       end
       Gamestate.current().sounds.hit:play()
       char:setState( Character.State.Damage )
-      Gamestate.current().doSmallScreenShake = true
-      Timer.add( 0.2, function() Gamestate.current().doSmallScreenShake = false end )
+      Gamestate.current().doBigScreenShake = true
+      Timer.add( 0.2, function() Gamestate.current().doBigScreenShake = false end )
     end
   elseif not char:isInvincible() then
     if math.abs( ey - cy ) < char:getHeight() * 0.34 then
