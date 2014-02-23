@@ -27,7 +27,7 @@ function GameplayGameState:init()
   self.pickups = {}
   for i = 1, 20 do
     local key = math.random() > 0.5 and 'Shitty Job' or 'Student Loans'
-    self.pickups[ #self.pickups + 1 ] = Pickup( math.random( 10, love.graphics.getWidth() - 10 ), math.random( 10, love.graphics.getHeight() - 10 ), 20, 20, nil, nil, key, math.ceil( math.random( 0, 100 ) ) )
+    self.pickups[ #self.pickups + 1 ] = Pickup( math.random( 10, love.graphics.getWidth() - 10 ), math.random( 10, love.graphics.getHeight() - 10 ), 10, 10, nil, nil, key, math.ceil( math.random( 0, 100 ) ) )
   end
 
   self.investments = {
@@ -42,8 +42,17 @@ end
 function GameplayGameState:update( dt )
   self.character:update( dt )
 
+  local cx, cy, cw, ch = self.character.x, self.character.y, self.character:getState().spriteWidth, self.character:getState().spriteHeight
+
   for i, v in ipairs( self.pickups ) do
     self.pickups[i]:update( dt )
+
+    local dx = (cx + cw * 0.5) - (self.pickups[i].x + self.pickups[i].width * 0.5)
+    local dy = (cy + ch * 0.5) - (self.pickups[i].y + self.pickups[i].height * 0.5)
+    local dist = math.sqrt( dx * dx + dy * dy )
+    if dist < math.max( (cw + self.pickups[i].width) * 0.5, (ch + self.pickups[i].height) * 0.5 ) then
+      self.pickups[i] = Pickup( math.random( 10, love.graphics.getWidth() - 10 ), math.random( 10, love.graphics.getHeight() - 10 ), 10, 10, nil, nil, key, math.ceil( math.random( 0, 100 ) ) )
+    end
   end
 end
 
