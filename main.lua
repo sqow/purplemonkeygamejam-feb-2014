@@ -40,6 +40,18 @@ function math.randomInt( min, max )
   return math.round( math.randomRange( min, max ) )
 end
 
+function math.norm( val, min, max )
+  return (val - min) / (max - min)
+end
+
+function math.lerp( norm, min, max )
+  return min + (max - min) * norm
+end
+
+function math.map( val, srcMin, srcMax, dstMin, dstMax )
+  return math.lerp( math.norm( val, srcMin, srcMax ), dstMin, dstMax )
+end
+
 --  Main functions
 
 function love.load( arg )
