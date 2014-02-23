@@ -25,6 +25,8 @@ function love.load( arg )
   Gamestate.switch( State.Title )
 
   love.graphics.setBackgroundColor( 255, 255, 255 )
+
+  love.graphics.setFont( love.graphics.newFont(14) )
 end
 
 function love.update( dt )

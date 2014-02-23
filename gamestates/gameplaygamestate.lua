@@ -64,7 +64,7 @@ function GameplayGameState:draw()
 
     love.graphics.setColor( 255, 255, 255, 255 )
     love.graphics.printf( string.format( 'Your money: $%.02f', self.money ), 20, 20, self.stats.width - 40, 'left' )
-    love.graphics.printf( string.rep( '-', 57 ), 20, 30, self.stats.width - 40, 'left' )
+    love.graphics.printf( string.rep( '-', 45 ), 20, 30, self.stats.width - 40, 'left' )
     love.graphics.printf( 'Your investments:', 20, 50, self.stats.width - 40, 'left' )
     local i = 65
     for k, v in pairs( self.investments ) do

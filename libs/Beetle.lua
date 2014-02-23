@@ -86,7 +86,7 @@ function beetle.draw()
     love.graphics.setColor( 0, 0, 0, 87 )
     love.graphics.rectangle( "fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight() )
 
-    love.graphics.setFont(dbg.font)
+    -- love.graphics.setFont(dbg.font)
     love.graphics.setColor(dbg.color[3], dbg.color[2], dbg.color[1], 255)
     love.graphics.print("Beetle Debug Screen :", dbg.x, dbg.y)
     love.graphics.setColor(dbg.color)

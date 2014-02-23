@@ -158,17 +158,26 @@ function Character:canMove()
   return st ~= Character.State.Attacking and st ~= Character.State.Damage and st ~= Character.State.Death
 end
 
+function Character:getWidth()
+  return self:getState().hitSizes[ self:getState().frame ].width
+end
+
+function Character:getHeight()
+  return self:getState().hitSizes[ self:getState().frame ].height
+end
+
 function Character:update( dt )
   if self.dead then
     return
   end
 
   local st = self:getState()
-  local char_width, char_height = st.hitSizes[ st.frame ].width, st.hitSizes[ st.frame ].height
-  local offset_width, offset_height = (st.spriteWidth - char_width) * 0.5, (st.spriteHeight - char_height) * 0.5
+  local char_width, char_height = self:getWidth(), self:getHeight()
+  local offset_width, offset_height = (st.spriteWidth - char_width) * 0.5, (st.spriteHeight - char_height)
   local yMovementModifier = love.graphics.getHeight() / love.graphics.getWidth()
   local xMovementModifier = love.graphics.getWidth() / love.graphics.getHeight()
 
+  --  Reset state if both up and down are pressed while both left and right are not pressed
   if keyDown.up and keyDown.down then
     keyDown.up = false
     keyDown.down = false
@@ -178,13 +187,20 @@ function Character:update( dt )
   end
 
   if keyDown.up then
-    self.y = math.max( self.y - (char_height * speedModifier) * (dt * yMovementModifier), -offset_width )
+    self.y = self.y - (char_height * speedModifier) * (dt * yMovementModifier)
+    if self.y < -offset_height then
+      self.y = -offset_height
+    end
   end
 
   if keyDown.down then
-    self.y = math.min( self.y + (char_height * speedModifier) * (dt * yMovementModifier), love.graphics.getHeight() - (st.spriteWidth * 0.5) - offset_width )
+    self.y = self.y + (char_height * speedModifier) * (dt * yMovementModifier)
+    if self.y > love.graphics.getHeight() - st.spriteHeight then
+      self.y = love.graphics.getHeight() - st.spriteHeight
+    end
   end
 
+  --  Reset state if both left and right are pressed while both up and down are not pressed
   if keyDown.left and keyDown.right then
     keyDown.left = false
     keyDown.right = false
@@ -195,12 +211,18 @@ function Character:update( dt )
 
   if keyDown.left then
     self.scaleX = -1
-    self.x = math.max( self.x - (char_width * speedModifier) * (dt * xMovementModifier), -offset_height )
+    self.x = self.x - (char_width * speedModifier) * (dt * xMovementModifier)
+    if self.x < -offset_width then
+      self.x = -offset_width
+    end
   end
 
   if keyDown.right then
     self.scaleX = 1
-    self.x = math.min( self.x + (char_width * speedModifier) * (dt * xMovementModifier), love.graphics.getWidth() - (st.spriteHeight * 0.5) - offset_height )
+    self.x = self.x + (char_width * speedModifier) * (dt * xMovementModifier)
+    if self.x > love.graphics.getWidth() - (st.spriteWidth - offset_width) then
+      self.x = love.graphics.getWidth() - (st.spriteWidth - offset_width)
+    end
   end
 
   st.batch:bind()
@@ -228,7 +250,17 @@ function Character:update( dt )
 end
 
 function Character:draw()
-  love.graphics.draw( self:getState().batch, self.x, self.y, 0, self.scaleX, self.scaleY, self.scaleX < 0 and self:getState().spriteWidth or 0 )
+  love.graphics.push()
+    love.graphics.translate( self.x, self.y )
+    love.graphics.draw( self:getState().batch, 0, 0, 0, self.scaleX, self.scaleY, self.scaleX < 0 and self:getState().spriteWidth or 0 )
+
+    local st = self:getState()
+    local w, h = self:getWidth(), self:getHeight()
+    love.graphics.setColor( 255, 0, 0 )
+    love.graphics.rectangle( 'line', (st.spriteWidth - w) * 0.5, st.spriteHeight - h, w, h )
+    love.graphics.setColor( 0, 255, 0 )
+    love.graphics.rectangle( 'line', 0, 0, st.spriteWidth, st.spriteHeight )
+  love.graphics.pop()
 end
 
 function Character:keypressed( key, isrepeat )
