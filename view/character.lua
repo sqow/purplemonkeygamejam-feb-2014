@@ -1,11 +1,13 @@
 Character = Class {
   x = 0,
   y = 0,
-  width = 70,
-  height = 70,
+  width = 80,
+  height = 75,
 
   scaleX = 1,
   scaleY = 1,
+
+  hitShape = nil,
 
   dead = false
 }
@@ -105,10 +107,13 @@ local keyDown = {
 function Character:__init( x, y, width, height, state )
   self.x = x or 0
   self.y = y or 0
-  self.width = width or 70
-  self.height = height or 70
+  self.width = width or 80
+  self.height = height or 75
 
   self.dead = false
+
+  self.hitShape = Collider:addRectangle( self.x, self.y, self.width, self.height )
+  self.hitShape.source = self
 
   self:setupState( Character.State.Standing, 'assets/images/stand.png', 6, 80, 75 )
   self:setupState( Character.State.Walking, 'assets/images/walk.png', 6, 80, 75 )
@@ -225,6 +230,12 @@ function Character:update( dt )
     end
   end
 
+  Collider:remove( self.hitShape )
+  local cx, cy = self.x + self:getState().spriteWidth * 0.5, self.y + self:getState().spriteHeight * 0.5
+  local rx, ry = cx - self:getWidth() * 0.5, (cy + self:getState().spriteHeight * 0.5) - self:getHeight()
+  self.hitShape = Collider:addRectangle( rx, ry, self:getWidth(), self:getHeight() )
+  self.hitShape.source = self
+
   st.batch:bind()
   st.batch:clear()
   st.batch:add( st.quads[ st.frame ], 0, 0 )
@@ -260,6 +271,11 @@ function Character:draw()
     love.graphics.rectangle( 'line', (st.spriteWidth - w) * 0.5, st.spriteHeight - h, w, h )
     love.graphics.setColor( 0, 255, 0 )
     love.graphics.rectangle( 'line', 0, 0, st.spriteWidth, st.spriteHeight )
+  love.graphics.pop()
+
+  love.graphics.push()
+    love.graphics.setColor( 0, 0, 255 )
+    self.hitShape:draw( 'line' )
   love.graphics.pop()
 end
 

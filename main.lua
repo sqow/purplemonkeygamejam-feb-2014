@@ -22,6 +22,8 @@ function love.load( arg )
   
   math.randomseed( os.time() )
 
+  Collider = HC(100)
+
   Gamestate.registerEvents()
   Gamestate.switch( State.Title )
 
@@ -32,6 +34,7 @@ end
 
 function love.update( dt )
   Timer.update( dt )
+  Collider:update( dt )
 end
 
 function love.draw()

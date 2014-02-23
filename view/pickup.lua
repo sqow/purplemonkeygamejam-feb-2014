@@ -8,7 +8,8 @@ Pickup = Class {
   faded = {0, 255, 0, 255 * 0.65},
   key = '',
   value = 0,
-  tweening = false
+  tweening = false,
+  hitShape = nil
 }
 
 Pickup.__name = 'Pickup'
@@ -35,6 +36,9 @@ function Pickup:__init( x, y, width, height, color, faded, key, value )
   self.value = value or 0
   self.tweening = false
 
+  self.hitShape = Collider:addCircle( self.x, self.y, math.max( self.width, self.height ) )
+  self.hitShape.source = self
+
   Timer.add( math.random(), function() goToFaded( self ) end )
 end
 
@@ -44,10 +48,11 @@ end
 
 function Pickup:draw()
   love.graphics.push()
-    love.graphics.translate( self.x, self.y )
+    --love.graphics.translate( self.x, self.y )
 
     love.graphics.setColor( self.color )
 
-    love.graphics.circle( 'fill', 0, 0, math.max( self.width, self.height ) )
+    --love.graphics.circle( 'fill', 0, 0, math.max( self.width, self.height ) )
+    self.hitShape:draw( 'fill' )
   love.graphics.pop()
 end
