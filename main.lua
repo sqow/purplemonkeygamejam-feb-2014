@@ -1,6 +1,7 @@
 Class = require 'libs/30log'
 require 'libs/Beetle'
 Gamestate = require 'libs/hump/gamestate'
+Timer = require 'libs/hump/timer'
 
 local gstitle = require 'gamestates/titlescreengamestate'
 local gsgameplay = require 'gamestates/gameplaygamestate'
@@ -9,8 +10,7 @@ local gsgameend = require 'gamestates/gameendgamestate'
 
 State = {
   Title = gstitle,
-  Gameplay = gsgameplay,
-  HUD = gshud,
+  Gameplay = gsgameplay
   End = gsgameend
 }
 
@@ -27,7 +27,7 @@ function love.load( arg )
 end
 
 function love.update( dt )
-  
+  Timer.update( dt )
 end
 
 function love.draw()

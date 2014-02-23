@@ -1,6 +1,7 @@
 TitleScreenGameState = {}
 
 function TitleScreenGameState:init()
+  self.color = {155, 50, 50}
 end
 
 function TitleScreenGameState:enter()
@@ -10,7 +11,7 @@ function TitleScreenGameState:update( dt )
 end
 
 function TitleScreenGameState:draw()
-  love.graphics.setBackgroundColor( 155, 50, 50 )
+  love.graphics.setBackgroundColor( self.color )
 
   local w, h = love.graphics.getWidth(), love.graphics.getHeight()
   local half_w, half_h = w * 0.5, h * 0.5
@@ -28,7 +29,9 @@ end
 
 function TitleScreenGameState:keyreleased( key )
   if key == 'kpenter' or key == 'return' then
-    Gamestate.switch( State.Gameplay )
+    Timer.tween( 0.75, self.color, {55, 0, 0}, 'out-quad', function()
+      Gamestate.switch( State.Gameplay )
+    end )
   end
 end
 

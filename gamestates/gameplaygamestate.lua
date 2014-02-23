@@ -17,7 +17,7 @@ function GameplayGameState:update( dt )
 end
 
 function GameplayGameState:draw()
-  love.graphics.draw( self.background, 0, 0, 0, 1, 1, 0, 0, 0, 0 )
+  love.graphics.draw( self.background, 0, 0 )
   self.character:draw()
 end
 

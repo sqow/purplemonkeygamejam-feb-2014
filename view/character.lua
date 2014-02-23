@@ -5,7 +5,9 @@ Character = Class {
   height = 70,
 
   scaleX = 1,
-  scaleY = 1
+  scaleY = 1,
+
+  dead = false
 }
 
 Character.State = {
@@ -68,11 +70,8 @@ Character.State = {
     spriteWidth = 1,
     spriteHeight = 1,
     hitSizes = {
-      {width = 51, height = 56},
-      {width = 56, height = 49},
-      {width = 73, height = 27},
-      {width = 75, height = 24},
-      {width = 34, height = 52}
+      {width = 46, height = 59},
+      {width = 46, height = 63}
     }
   },
   Death = {
@@ -83,8 +82,10 @@ Character.State = {
     spriteWidth = 1,
     spriteHeight = 1,
     hitSizes = {
-      {width = 46, height = 59},
-      {width = 46, height = 63}
+      {width = 51, height = 56},
+      {width = 56, height = 49},
+      {width = 73, height = 27},
+      {width = 75, height = 24}
     }
   }
 }
@@ -92,7 +93,6 @@ Character.State = {
 Character.__name = 'Character'
 
 local framerate, time, speedModifier = 1 / 12, 0, 2
-local deathAnimCounter = 0
 
 local keyDown = {
   left = false,
@@ -108,11 +108,13 @@ function Character:__init( x, y, width, height, state )
   self.width = width or 70
   self.height = height or 70
 
+  self.dead = false
+
   self:setupState( Character.State.Standing, 'assets/images/stand.png', 6, 80, 75 )
   self:setupState( Character.State.Walking, 'assets/images/walk.png', 6, 80, 75 )
   self:setupState( Character.State.Attacking, 'assets/images/attack.png', 9, 80, 75 )
-  self:setupState( Character.State.Damage, 'assets/images/hurt.png', 5, 80, 75 )
-  self:setupState( Character.State.Death, 'assets/images/death.png', 2, 80, 75 )
+  self:setupState( Character.State.Damage, 'assets/images/death.png', 2, 80, 75 )
+  self:setupState( Character.State.Death, 'assets/images/hurt.png', 4, 80, 75 )
 
   self:setState( state or Character.State.Standing )
 end
@@ -141,6 +143,10 @@ function Character:setState( state )
     keyDown.down = false
     keyDown.right = false
   end
+
+  if self.state ~= Character.State.Death then
+    self.dead = false
+  end
 end
 
 function Character:getState()
@@ -153,6 +159,10 @@ function Character:canMove()
 end
 
 function Character:update( dt )
+  if self.dead then
+    return
+  end
+
   local st = self:getState()
   local char_width, char_height = st.hitSizes[ st.frame ].width, st.hitSizes[ st.frame ].height
   local offset_width, offset_height = (st.spriteWidth - char_width) * 0.5, (st.spriteHeight - char_height) * 0.5
@@ -190,11 +200,10 @@ function Character:update( dt )
         self:setState( Character.State.Standing )
       elseif st == Character.State.Death then
         -- You dead, sucka
-        deathAnimCounter = deathAnimCounter + 1
-        if deathAnimCounter >= 5 then
-          --  End game here
+        self.dead = true
+        Timer.add( 5, function()
           self:setState( Character.State.Standing )
-        end
+        end )
       end
     end
   end
