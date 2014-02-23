@@ -5,12 +5,11 @@ Timer = require 'libs/hump/timer'
 
 local gstitle = require 'gamestates/titlescreengamestate'
 local gsgameplay = require 'gamestates/gameplaygamestate'
-local gshud = require 'gamestates/hudgamestate'
 local gsgameend = require 'gamestates/gameendgamestate'
 
 State = {
   Title = gstitle,
-  Gameplay = gsgameplay
+  Gameplay = gsgameplay,
   End = gsgameend
 }
 

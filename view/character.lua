@@ -166,23 +166,41 @@ function Character:update( dt )
   local st = self:getState()
   local char_width, char_height = st.hitSizes[ st.frame ].width, st.hitSizes[ st.frame ].height
   local offset_width, offset_height = (st.spriteWidth - char_width) * 0.5, (st.spriteHeight - char_height) * 0.5
+  local yMovementModifier = love.graphics.getHeight() / love.graphics.getWidth()
+  local xMovementModifier = love.graphics.getWidth() / love.graphics.getHeight()
+
+  if keyDown.up and keyDown.down then
+    keyDown.up = false
+    keyDown.down = false
+    if not keyDown.left and not keyDown.right then
+      self:setState( Character.State.Standing )
+    end
+  end
 
   if keyDown.up then
-    self.y = math.max( self.y - (char_height * speedModifier) * dt, -offset_width )
+    self.y = math.max( self.y - (char_height * speedModifier) * (dt * yMovementModifier), -offset_width )
   end
 
   if keyDown.down then
-    self.y = math.min( self.y + (char_height * speedModifier) * dt, love.graphics.getHeight() - (st.spriteWidth * 0.5) - offset_width )
+    self.y = math.min( self.y + (char_height * speedModifier) * (dt * yMovementModifier), love.graphics.getHeight() - (st.spriteWidth * 0.5) - offset_width )
+  end
+
+  if keyDown.left and keyDown.right then
+    keyDown.left = false
+    keyDown.right = false
+    if not keyDown.up and not keyDown.down then
+      self:setState( Character.State.Standing )
+    end
   end
 
   if keyDown.left then
     self.scaleX = -1
-    self.x = math.max( self.x - (char_width * speedModifier) * dt, -offset_height )
+    self.x = math.max( self.x - (char_width * speedModifier) * (dt * xMovementModifier), -offset_height )
   end
 
   if keyDown.right then
     self.scaleX = 1
-    self.x = math.min( self.x + (char_width * speedModifier) * dt, love.graphics.getWidth() - (st.spriteHeight * 0.5) - offset_height )
+    self.x = math.min( self.x + (char_width * speedModifier) * (dt * xMovementModifier), love.graphics.getWidth() - (st.spriteHeight * 0.5) - offset_height )
   end
 
   st.batch:bind()
