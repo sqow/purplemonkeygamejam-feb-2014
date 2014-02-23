@@ -1,4 +1,5 @@
 require 'view/character'
+require 'view/enemy'
 require 'view/pickup'
 
 GameplayGameState = {}
@@ -34,6 +35,13 @@ function GameplayGameState:init()
     self.pickups[ #self.pickups + 1 ] = Pickup( math.random( 10, love.graphics.getWidth() - 10 ), math.random( 10, love.graphics.getHeight() - 10 ), 10, 10, nil, nil, key, math.ceil( math.random( 0, 100 ) ) )
   end
 
+  self.enemies = {}
+  for i = 1, 10 do
+    local lx = math.random()
+    self.enemies[ #self.enemies + 1 ] = Enemy( lx > 0.5 and love.graphics.getWidth() + 80 or -80, math.random( 0, love.graphics.getHeight() - 75 ) )
+    self.enemies[ #self.enemies ]:setState( Enemy.State.Walking )
+  end
+
   self.investments = {
     ['Shitty Job'] = 25,
     ['Student Loans'] = -1000
@@ -61,6 +69,12 @@ function on_collision( dt, shapeA, shapeB, mtvX, mtvY )
       if idx then
         Gamestate.current().pickups[ idx ] = Pickup( math.random( 10, love.graphics.getWidth() - 10 ), math.random( 10, love.graphics.getHeight() - 10 ), 10, 10, nil, nil, key, math.ceil( math.random( 0, 100 ) ) )
       end
+    elseif shapeB.source:is( Enemy ) then
+      if shapeB.source:getState() == Enemy.State.Attacking then
+        --  TODO
+      else
+        shapeB.source:setState( Enemy.State.Attacking )
+      end
     end
   elseif shapeB.source:is( Character ) then
     if shapeA.source:is( Pickup ) then
@@ -68,6 +82,31 @@ function on_collision( dt, shapeA, shapeB, mtvX, mtvY )
       if idx then
         Gamestate.current().pickups[ idx ] = Pickup( math.random( 10, love.graphics.getWidth() - 10 ), math.random( 10, love.graphics.getHeight() - 10 ), 10, 10, nil, nil, key, math.ceil( math.random( 0, 100 ) ) )
       end
+    elseif shapeA.source:is( Enemy ) then
+      if shapeA.source:getState() == Enemy.State.Attacking then
+        --  TODO
+      else
+        shapeA.source:setState( Enemy.State.Attacking )
+      end
+    end
+  elseif shapeA.source:is( Enemy ) and shapeB.source:is( Enemy ) then
+    if shapeA.source:getState() == Enemy.State.Attacking then
+      if shapeB.source:getState() == Enemy.State.Attacking then
+        shapeB.source:setState( Enemy.State.Damage )
+      else
+        shapeB.source.x = shapeB.source.x - mtvX
+        shapeB.source.y = shapeB.source.y - mtvY
+      end
+    elseif shapeB.source:getState() == Enemy.State.Attacking then
+      if shapeA.source:getState() == Enemy.State.Attacking then
+        shapeA.source:setState( Enemey.State.Damage )
+      else
+        shapeA.source.x = shapeA.source.x + mtvX
+        shapeA.source.y = shapeA.source.y + mtvY
+      end
+    else
+      shapeA.source.x = shapeA.source.x + mtvX
+      shapeA.source.y = shapeA.source.y + mtvY
     end
   end
 end
@@ -78,6 +117,10 @@ end
 
 function GameplayGameState:update( dt )
   self.character:update( dt )
+  
+  for i, v in ipairs( self.enemies ) do
+    v:update( dt, self.character )
+  end
 end
 
 function GameplayGameState:draw()
@@ -85,7 +128,11 @@ function GameplayGameState:draw()
   self.character:draw()
 
   for i, v in ipairs( self.pickups ) do
-    self.pickups[i]:draw()
+    v:draw()
+  end
+
+  for i, v in ipairs( self.enemies ) do
+    v:draw()
   end
 
   love.graphics.push()

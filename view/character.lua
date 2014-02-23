@@ -73,6 +73,10 @@ Character.State = {
     spriteHeight = 1,
     hitSizes = {
       {width = 46, height = 59},
+      {width = 46, height = 63},
+      {width = 46, height = 59},
+      {width = 46, height = 63},
+      {width = 46, height = 59},
       {width = 46, height = 63}
     }
   },
@@ -118,7 +122,7 @@ function Character:__init( x, y, width, height, state )
   self:setupState( Character.State.Standing, 'assets/images/stand.png', 6, 80, 75 )
   self:setupState( Character.State.Walking, 'assets/images/walk.png', 6, 80, 75 )
   self:setupState( Character.State.Attacking, 'assets/images/attack.png', 9, 80, 75 )
-  self:setupState( Character.State.Damage, 'assets/images/death.png', 2, 80, 75 )
+  self:setupState( Character.State.Damage, 'assets/images/death.png', 6, 80, 75 )
   self:setupState( Character.State.Death, 'assets/images/hurt.png', 4, 80, 75 )
 
   self:setState( state or Character.State.Standing )
@@ -139,6 +143,10 @@ function Character:setupState( state, imgFilename, numSprites, spriteWidth, spri
 end
 
 function Character:setState( state )
+  if state == self:getState() then
+    return
+  end
+
   self.state = state or Character.State.Standing
   self.state.frame = 1
 
@@ -263,6 +271,7 @@ end
 function Character:draw()
   love.graphics.push()
     love.graphics.translate( self.x, self.y )
+    love.graphics.setColor( 255, 255, 255 )
     love.graphics.draw( self:getState().batch, 0, 0, 0, self.scaleX, self.scaleY, self.scaleX < 0 and self:getState().spriteWidth or 0 )
 
     local st = self:getState()
