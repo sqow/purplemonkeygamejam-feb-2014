@@ -1,4 +1,5 @@
 require 'view/character'
+require 'view/pickup'
 
 GameplayGameState = {}
 
@@ -23,6 +24,12 @@ function GameplayGameState:init()
 
   self.money = 100
 
+  self.pickups = {}
+  for i = 1, 20 do
+    local key = math.random() > 0.5 and 'Shitty Job' or 'Student Loans'
+    self.pickups[ #self.pickups + 1 ] = Pickup( math.random( 10, love.graphics.getWidth() - 10 ), math.random( 10, love.graphics.getHeight() - 10 ), 20, 20, nil, nil, key, math.ceil( math.random( 0, 100 ) ) )
+  end
+
   self.investments = {
     ['Shitty Job'] = 25,
     ['Student Loans'] = -1000
@@ -34,11 +41,19 @@ end
 
 function GameplayGameState:update( dt )
   self.character:update( dt )
+
+  for i, v in ipairs( self.pickups ) do
+    self.pickups[i]:update( dt )
+  end
 end
 
 function GameplayGameState:draw()
   love.graphics.draw( self.background, 0, 0 )
   self.character:draw()
+
+  for i, v in ipairs( self.pickups ) do
+    self.pickups[i]:draw()
+  end
 
   --  Stats panel
   love.graphics.push()

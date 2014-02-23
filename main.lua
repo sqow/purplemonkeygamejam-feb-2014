@@ -18,6 +18,8 @@ State = {
 function love.load( arg )
   beetle.load()
   beetle.setKey( '`' )
+  
+  math.randomseed( os.time() )
 
   Gamestate.registerEvents()
   Gamestate.switch( State.Title )
