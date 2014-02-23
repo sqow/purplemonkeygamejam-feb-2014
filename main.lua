@@ -14,6 +14,32 @@ State = {
   End = gsgameend
 }
 
+function math.round( val )
+  local lower = math.ceil( val - 1 )
+  local higher = math.floor( val + 1 )
+  local ld, hd = val - lower, higher - val
+
+  if ld > hd then
+    return higher
+  elseif ld < hd then
+    return lower
+  else
+    return val
+  end
+end
+
+function math.randomRange( min, max )
+  min = min or 0
+  max = max or 1
+  return min + math.random() * (max - min)
+end
+
+function math.randomInt( min, max )
+  min = min or 0
+  max = max or 1
+  return math.round( math.randomRange( min, max ) )
+end
+
 --  Main functions
 
 function love.load( arg )

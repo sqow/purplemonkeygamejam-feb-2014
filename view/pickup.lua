@@ -8,42 +8,56 @@ Pickup = Class {
   faded = {0, 255, 0, 255 * 0.65},
   key = '',
   value = 0,
-  tweening = false,
   hitShape = nil
 }
 
 Pickup.__name = 'Pickup'
 
-local goToFaded, goToReal
+local fullAlpha = 255 * 0.85
+local fadedAlpha = 255 * 0.65
 
-goToFaded = function( pickup )
-  Timer.tween( 0.5, pickup, {color=pickup.faded}, 'in-bounce', function() goToReal( pickup ) end )
-end
+Pickup.Type = {
+  Money = {
+    color = {255, 255, 0, fullAlpha},
+    faded = {255, 255, 0, fadedAlpha},
+    label = 'M'
+  },
+  Food = {
+    color = {255, 0, 0, fullAlpha},
+    faded = {255, 0, 0, fadedAlpha},
+    label = 'F'
+  },
+  Water = {
+    color = {0, 0, 255, fullAlpha},
+    faded = {0, 0, 255, fadedAlpha},
+    label = 'W'
+  },
+  Drink = {
+    color = {0, 255, 0, fullAlpha},
+    faded = {0, 255, 0, fadedAlpha},
+    label = 'D'
+  }
+}
 
-goToReal = function( pickup )
-  Timer.tween( 0.5, pickup, {color=pickup.real_color}, 'in-bounce', function() goToFaded( pickup ) end )
-end
-
-function Pickup:__init( x, y, width, height, color, faded, key, value )
+function Pickup:__init( x, y, width, height, pickupType, value )
   self.x = x or 0
   self.y = y or 0
   self.width = width or 20
   self.height = height or 20
-  self.real_color = color or {0, 255, 0, 255 * 0.85}
-  self.color = color or {0, 255, 0, 255 * 0.85}
-  self.faded = faded or {0, 205, 0, 255 * 0.65}
-  self.key = key or ''
+
+  pickupType = pickupType or Pickup.Type.Money
+  self.real_color = pickupType.color
+  self.color = pickupType.color
+  self.faded = pickupType.faded
+  self.ptype = pickupType
+
   self.value = value or 0
-  self.tweening = false
 
   self.hitShape = Collider:addCircle( self.x, self.y, math.max( self.width, self.height ) )
   self.hitShape.source = self
-
-  Timer.add( math.random(), function() goToFaded( self ) end )
 end
 
 function Pickup:update( dt )
-  
 end
 
 function Pickup:draw()
@@ -54,5 +68,17 @@ function Pickup:draw()
 
     --love.graphics.circle( 'fill', 0, 0, math.max( self.width, self.height ) )
     self.hitShape:draw( 'fill' )
+
+    local icolor = {
+      math.abs( 255 - self.color[1] ),
+      math.abs( 255 - self.color[2] ),
+      math.abs( 255 - self.color[3] ),
+      self.color[4]
+    }
+
+    local ir, ig, ib, ia = unpack( icolor )
+    local r, g, b, a = unpack( self.color )
+    love.graphics.setColor( icolor )
+    love.graphics.printf( self.ptype.label, self.x - self.width * 0.5, self.y - self.height * 0.8, self.width, 'center' )
   love.graphics.pop()
 end

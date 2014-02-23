@@ -106,7 +106,10 @@ function Enemy:__init( x, y, width, height, state )
   self.width = width or 80
   self.height = height or 75
 
+  self.dying = false
   self.dead = false
+
+  self.target = nil
 
   self.hitShape = Collider:addRectangle( self.x, self.y, self.width, self.height )
   self.hitShape.source = self
@@ -122,7 +125,7 @@ function Enemy:__init( x, y, width, height, state )
   self.framerate = 1/12
   self.time = 0
 
-  self:setState( state or Enemy.State.Standing )
+  self:setState( state or Enemy.State.Walking )
 end
 
 function Enemy:setupState( state, imgFilename, numSprites, spriteWidth, spriteHeight )
@@ -149,6 +152,8 @@ function Enemy:setState( state )
 
   if self.state ~= Enemy.State.Death then
     self.dead = false
+  elseif not self.dying then
+    self.dying = true
   end
 end
 
@@ -182,8 +187,17 @@ function Enemy:update( dt, char )
   local dx, dy = cx - ex, cy - ey
 
   if st == Enemy.State.Walking then
+    if self.target then
+      dx = self.target[1] - ex
+      dy = self.target[2] - ey
+    end
+
     self.x = self.x + (((dx * 0.1) * xMovementModifier) * self.speedModifier) * dt
     self.y = self.y + (((dy * 0.1) * yMovementModifier) * self.speedModifier) * dt
+
+    if self.target and math.round(self.x) == math.round(self.target[1]) and math.round(self.y) == math.round(self.target[2]) then
+      self.target = nil
+    end
 
     self.scaleX = dx > 0 and 1 or -1
     

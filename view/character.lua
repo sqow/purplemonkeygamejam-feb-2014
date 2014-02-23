@@ -116,6 +116,8 @@ function Character:__init( x, y, width, height, state )
 
   self.dead = false
 
+  self.invincible = false
+
   self.hitShape = Collider:addRectangle( self.x, self.y, self.width, self.height )
   self.hitShape.source = self
 
@@ -150,7 +152,16 @@ function Character:setState( state )
   self.state = state or Character.State.Standing
   self.state.frame = 1
 
-  if self.state ~= Character.State.Standing or self.state ~= Character.State.Walking then
+  if self.state ~= Character.State.Standing and self.state ~= Character.State.Walking then
+    if self.state == Character.State.Damage then
+      self.invincible = true
+      local function generateCB( c )
+        return function()
+          c.invincible = false
+        end
+      end
+      Timer.add( 2, generateCB( self ) )
+    end
     keyDown.up = false
     keyDown.left = false
     keyDown.down = false
@@ -177,6 +188,10 @@ end
 
 function Character:getHeight()
   return self:getState().hitSizes[ self:getState().frame ].height
+end
+
+function Character:isInvincible()
+  return self.invincible
 end
 
 function Character:update( dt )
@@ -261,7 +276,7 @@ function Character:update( dt )
         -- You dead, sucka
         self.dead = true
         Timer.add( 5, function()
-          self:setState( Character.State.Standing )
+          Gamestate.switch( State.End )
         end )
       end
     end
@@ -274,18 +289,22 @@ function Character:draw()
     love.graphics.setColor( 255, 255, 255 )
     love.graphics.draw( self:getState().batch, 0, 0, 0, self.scaleX, self.scaleY, self.scaleX < 0 and self:getState().spriteWidth or 0 )
 
+    --[[
     local st = self:getState()
     local w, h = self:getWidth(), self:getHeight()
     love.graphics.setColor( 255, 0, 0 )
     love.graphics.rectangle( 'line', (st.spriteWidth - w) * 0.5, st.spriteHeight - h, w, h )
     love.graphics.setColor( 0, 255, 0 )
     love.graphics.rectangle( 'line', 0, 0, st.spriteWidth, st.spriteHeight )
+    ]]
   love.graphics.pop()
 
+  --[[
   love.graphics.push()
     love.graphics.setColor( 0, 0, 255 )
     self.hitShape:draw( 'line' )
   love.graphics.pop()
+  ]]
 end
 
 function Character:keypressed( key, isrepeat )
@@ -305,10 +324,10 @@ function Character:keypressed( key, isrepeat )
     elseif key == ' ' then
       keyDown.attack = true
       self:setState( Character.State.Attacking )
-    elseif key == 'kpenter' or key == 'return' then
+    --[[elseif key == 'kpenter' or key == 'return' then
       self:setState( self:getState() ~= Character.State.Damage and Character.State.Damage or Character.State.Standing )
     elseif key == 'z' then
-      self:setState( self:getState() ~= Character.State.Death and Character.State.Death or Character.State.Standing )
+      self:setState( self:getState() ~= Character.State.Death and Character.State.Death or Character.State.Standing )]]
     end
   end
 end
