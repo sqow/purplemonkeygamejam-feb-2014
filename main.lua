@@ -2,6 +2,7 @@ Class = require 'libs/30log'
 require 'libs/Beetle'
 Gamestate = require 'libs/hump/gamestate'
 Timer = require 'libs/hump/timer'
+HC = require 'libs/hardoncollider'
 
 local gstitle = require 'gamestates/titlescreengamestate'
 local gsgameplay = require 'gamestates/gameplaygamestate'
