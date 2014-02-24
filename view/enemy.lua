@@ -122,6 +122,11 @@ function Enemy:__init( x, y, width, height, state )
 
   self.speedModifier = math.random( 0.8, 1.2 )
 
+  self.speed = {
+    x = math.random( 5 ) * self.speedModifier,
+    y = math.random( 5 ) * self.speedModifier
+  }
+
   self.framerate = 1/12
   self.time = 0
 
@@ -192,8 +197,11 @@ function Enemy:update( dt, char )
       dy = self.target[2] - ey
     end
 
-    self.x = self.x + (((dx * 0.1) * xMovementModifier) * self.speedModifier) * dt
-    self.y = self.y + (((dy * 0.1) * yMovementModifier) * self.speedModifier) * dt
+    local mx = math.clamp((dx * dt), -0.25, 0.25) * self.speedModifier
+    local my = math.clamp((dy * dt), -0.25, 0.25) * self.speedModifier
+
+    self.x = self.x + mx
+    self.y = self.y + my
 
     if self.target and math.round(self.x) == math.round(self.target[1]) and math.round(self.y) == math.round(self.target[2]) then
       self.target = nil

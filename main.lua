@@ -52,6 +52,10 @@ function math.map( val, srcMin, srcMax, dstMin, dstMax )
   return math.lerp( math.norm( val, srcMin, srcMax ), dstMin, dstMax )
 end
 
+function math.clamp( val, min, max )
+  return math.min( math.max( val, math.min( min, max ) ), math.max( min, max ) )
+end
+
 --  Main functions
 
 function love.load( arg )
