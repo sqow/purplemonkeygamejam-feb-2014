@@ -2,10 +2,12 @@ TitleScreenGameState = {}
 
 function TitleScreenGameState:init()
   self.color = {155, 50, 50}
+  self.transitioning = false
 end
 
 function TitleScreenGameState:enter()
   self.color = {155, 50, 50}
+  self.transitioning = false
 end
 
 function TitleScreenGameState:update( dt )
@@ -46,10 +48,13 @@ function TitleScreenGameState:keypressed( key, isrepeat )
 end
 
 function TitleScreenGameState:keyreleased( key )
-  if key == 'kpenter' or key == 'return' then
-    Timer.tween( 0.75, self.color, {55, 0, 0}, 'out-quad', function()
-      Gamestate.switch( State.Gameplay )
-    end )
+  if not self.transitioning then
+    if key == 'kpenter' or key == 'return' then
+      self.transitioning = true
+      Timer.tween( 0.75, self.color, {55, 0, 0}, 'out-quad', function()
+        Gamestate.switch( State.Gameplay )
+      end )
+    end
   end
 end
 

@@ -8,9 +8,15 @@ local background = nil
 
 local collisionCallbacks = {}
 
+local BigFont
+local RegFont
+
 function GameplayGameState:init()
   self.character = Character()
   self.background = love.graphics.newImage( 'assets/images/background.jpg' )
+
+  BigFont = love.graphics.newFont( 36 )
+  RegFont = love.graphics.getFont()
 
   local sw, sh = love.graphics.getWidth(), 54
   local cx = -(sw * 0.95)
@@ -84,9 +90,15 @@ function GameplayGameState:enter()
     end
   end
 
-  self.decayTimer = Timer.addPeriodic( 1, generateDecayFunc( self ) )
+  local function generateTimerFunc( gs )
+    return function()
+      gs.countTime = gs.countTime + 1
+    end
+  end
 
-  self.hitsToDraw = {}
+  self.countTime = 0
+  self.decayTimer = Timer.addPeriodic( 1, generateDecayFunc( self ) )
+  self.countTimer = Timer.addPeriodic( 1, generateTimerFunc( self ) )
 
   self.pickups = {}
   for i = 1, 20 do
@@ -223,6 +235,9 @@ function GameplayGameState:update( dt )
       self.character:setState( Character.State.Death )
       Gamestate.current().doBigScreenShake = true
       Timer.add( 0.6, function() Gamestate.current().doBigScreenShake = false end )
+      Collider:clear()
+      Timer.cancel( self.decayTimer )
+      Timer.cancel( self.countTimer )
     end
   end
 
@@ -263,12 +278,13 @@ function GameplayGameState:draw()
   end
 
   love.graphics.push()
-  love.graphics.setColor( 255, 255, 0, 255 )
-  for i = #self.hitsToDraw, 1, -1 do
-    self.hitsToDraw[i].count = self.hitsToDraw[i].count + 1
-    love.graphics.rectangle( 'line', self.hitsToDraw[i].x, self.hitsToDraw[i].y, self.hitsToDraw[i].width, self.hitsToDraw[i].height )
-    love.graphics.circle( 'line', self.hitsToDraw[i].circ[1][1], self.hitsToDraw[i].circ[1][2], self.hitsToDraw[i].circ[2] )
-  end
+    local seconds = self.countTime % 60
+    local minutes = math.floor( self.countTime / 60 ) % 60
+    local hours = math.floor( self.countTime / 60 / 60 )
+    love.graphics.setColor( 0, 0, 0, 255 )
+    love.graphics.setFont( BigFont )
+    love.graphics.printf( string.format( '%02d:%02d:%02d', hours, minutes, seconds ), 0, 0, love.graphics.getWidth(), 'center' )
+    love.graphics.setFont( RegFont )
   love.graphics.pop()
 
   --  Stats panel
@@ -278,12 +294,47 @@ function GameplayGameState:draw()
     love.graphics.setColor( self.stats.color )
     love.graphics.rectangle( 'fill', 0, 0, self.stats.width, self.stats.height )
 
-    love.graphics.setColor( math.abs(255 - self.stats.color[1]), math.abs(255 - self.stats.color[2]), math.abs(255 - self.stats.color[3]), 255 )
     local w = (love.graphics.getWidth() - 40) * 0.33
-    love.graphics.printf( string.format( 'Your money: $%.02f', self.values[1][1] ), 20 + w * 0.25, 20, w, 'left' )
-    love.graphics.printf( string.format( 'Your food: %.02f',   self.values[2][1] ), 20 + w + w * 0.25, 20, w, 'left' )
-    love.graphics.printf( string.format( 'Your water: %.02f',  self.values[3][1] ), 20 + w * 2 + w * 0.25, 20, w, 'left' )
-    --love.graphics.printf( string.format( 'Your drink: %.02f', self.values[4][1] ), 20 + w * 3, 20, self.stats.width - 40, 'left' )
+    local mw = math.clamp( math.map( self.values[1][1], -1000, 1000, 0, w - 10), 0, w - 10 )
+    local fw = math.clamp( math.map( self.values[2][1], -1000, 1000, 0, w - 10), 0, w - 10 )
+    local ww = math.clamp( math.map( self.values[3][1], -1000, 1000, 0, w - 10), 0, w - 10 )
+    local icolor = {math.abs(255 - self.stats.color[1]), math.abs(255 - self.stats.color[2]), math.abs(255 - self.stats.color[3]), 255}
+
+    love.graphics.push()
+      love.graphics.translate( 20, 15 )
+      love.graphics.setColor( Pickup.Type.Money.color )
+      love.graphics.rectangle( 'fill', 5, 5, mw, 15 )
+
+      love.graphics.setColor( 0, 0, 0, 255 )
+      love.graphics.rectangle( 'line', 0, 0, w, 25 )
+
+      love.graphics.setColor( unpack( icolor ) )
+      love.graphics.printf( string.format( 'Your money: $%.02f', self.values[1][1] ), 0, 5, w, 'center' )
+    love.graphics.pop()
+
+    love.graphics.push()
+      love.graphics.translate( 20 + w, 15 )
+      love.graphics.setColor( Pickup.Type.Food.color )
+      love.graphics.rectangle( 'fill', 5, 5, fw, 15 )
+
+      love.graphics.setColor( 0, 0, 0, 255 )
+      love.graphics.rectangle( 'line', 0, 0, w, 25 )
+
+      love.graphics.setColor( unpack( icolor ) )
+      love.graphics.printf( string.format( 'Your food: %.02f',   self.values[2][1] ), 0, 5, w, 'center' )
+    love.graphics.pop()
+
+    love.graphics.push()
+      love.graphics.translate( 20 + w * 2, 15 )
+      love.graphics.setColor( Pickup.Type.Water.color )
+      love.graphics.rectangle( 'fill', 5, 5, ww, 15 )
+
+      love.graphics.setColor( 0, 0, 0, 255 )
+      love.graphics.rectangle( 'line', 0, 0, w, 25 )
+
+      love.graphics.setColor( unpack( icolor ) )
+      love.graphics.printf( string.format( 'Your water: %.02f',  self.values[3][1] ), 0, 5, w, 'center' )
+    love.graphics.pop()
   love.graphics.pop()
 
   if self.doBigScreenShake or self.doSmallScreenShake then
@@ -296,23 +347,10 @@ end
 
 function GameplayGameState:keypressed( key, isrepeat )
   self.character:keypressed( key, isrepeat )
-
-  if key == 'kpenter' or key == 'return' then
-    Gamestate.switch( State.End )
-  end
 end
 
 function GameplayGameState:keyreleased( key )
   self.character:keyreleased( key )
-
-  --[[
-  if key == 'tab' then
-    self.stats.open = not self.stats.open
-    local tx = self.stats.open and self.stats.openX or self.stats.closeX
-    local tt = self.stats.open and 'in' or 'out'
-    Timer.tween( 0.15, self.stats, {x = tx}, tt..'-back' )
-  end
-  ]]
 end
 
 function GameplayGameState:mousepressed( x, y, button )
@@ -324,6 +362,7 @@ end
 function GameplayGameState:leave()
   Collider:clear()
   Timer.cancel( self.decayTimer )
+  Timer.cancel( self.countTimer )
   self.bgMusic:stop()
 end
 

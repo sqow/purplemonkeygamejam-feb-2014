@@ -153,7 +153,7 @@ function Character:setupState( state, imgFilename, numSprites, spriteWidth, spri
 end
 
 function Character:setState( state )
-  if state == self:getState() then
+  if state == self.state or (self.state == Character.State.Death and state ~= Character.State.Standing) then
     return
   end
 
@@ -199,7 +199,7 @@ function Character:getHeight()
 end
 
 function Character:isInvincible()
-  return self.invincible
+  return self.invincible or self.dead
 end
 
 function Character:update( dt )
@@ -324,35 +324,41 @@ function Character:draw()
 end
 
 function Character:keypressed( key, isrepeat )
-  if self:canMove() then
-    if key == 'w' or key == 'up' then
-      if self:getState() ~= Character.State.Walking then self:setState( Character.State.Walking ) end
-      keyDown.up = true
-      wasDown.up = true
-    elseif key == 'a' or key == 'left' then
-      if self:getState() ~= Character.State.Walking then self:setState( Character.State.Walking ) end
-      keyDown.left = true
-      wasDown.left = true
-    elseif key == 's' or key == 'down' then
-      if self:getState() ~= Character.State.Walking then self:setState( Character.State.Walking ) end
-      keyDown.down = true
-      wasDown.down = true
-    elseif key == 'd' or key == 'right' then
-      if self:getState() ~= Character.State.Walking then self:setState( Character.State.Walking ) end
-      keyDown.right = true
-      wasDown.right = true
-    elseif key == ' ' then
-      keyDown.attack = true
-      self:setState( Character.State.Attacking )
-    --[[elseif key == 'kpenter' or key == 'return' then
-      self:setState( self:getState() ~= Character.State.Damage and Character.State.Damage or Character.State.Standing )
-    elseif key == 'z' then
-      self:setState( self:getState() ~= Character.State.Death and Character.State.Death or Character.State.Standing )]]
-    end
+  if self.dead then
+    return
+  end
+
+  if key == 'w' or key == 'up' then
+    if self:getState() ~= Character.State.Walking then self:setState( Character.State.Walking ) end
+    if self:canMove() then keyDown.up = true end
+    wasDown.up = true
+  elseif key == 'a' or key == 'left' then
+    if self:getState() ~= Character.State.Walking then self:setState( Character.State.Walking ) end
+    if self:canMove() then keyDown.left = true end
+    wasDown.left = true
+  elseif key == 's' or key == 'down' then
+    if self:getState() ~= Character.State.Walking then self:setState( Character.State.Walking ) end
+    if self:canMove() then keyDown.down = true end
+    wasDown.down = true
+  elseif key == 'd' or key == 'right' then
+    if self:getState() ~= Character.State.Walking then self:setState( Character.State.Walking ) end
+    if self:canMove() then keyDown.right = true end
+    wasDown.right = true
+  elseif key == ' ' then
+    if self:canMove() then keyDown.attack = true end
+    self:setState( Character.State.Attacking )
+  --[[elseif key == 'kpenter' or key == 'return' then
+    self:setState( self:getState() ~= Character.State.Damage and Character.State.Damage or Character.State.Standing )
+  elseif key == 'z' then
+    self:setState( self:getState() ~= Character.State.Death and Character.State.Death or Character.State.Standing )]]
   end
 end
 
 function Character:keyreleased( key )
+  if self.dead then
+    return
+  end
+
   if key == 'w' or key == 'up' then
     if self:canMove() and self:getState() ~= Character.State.Standing and not keyDown.left and not keyDown.right and not keyDown.down then self:setState( Character.State.Standing ) end
     keyDown.up = false
